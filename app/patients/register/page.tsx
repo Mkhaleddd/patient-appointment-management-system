@@ -1,4 +1,4 @@
-import RegisterForm from '@/app/forms/RegisterForm'
+import RegisterForm from '@/components/forms/RegisterForm'
 import Image from 'next/image'
 import React from 'react'
 
@@ -17,7 +17,7 @@ const RegisterPage = () => {
             className="mb-12 h-10 w-fit"
           />
 
-        <RegisterForm />
+        <RegisterForm  />
         </div>
       </section>
 

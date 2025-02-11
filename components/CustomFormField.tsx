@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { Control, FieldValues } from "react-hook-form";
 import PhoneInput from 'react-phone-number-input';
 import { E164Number } from "libphonenumber-js/core";
@@ -18,21 +18,21 @@ import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Textarea } from "./ui/textarea";
 import { Checkbox } from "./ui/checkbox";
- 
-
+import { useTheme } from "next-themes"; 
 
 export const enum FieldTypes {
   INPUT = "input",
   PhoneInput = "phoneinput",
   TEXTAREA = "textarea",
   SELECT = "select",
-  DATE_PICKER="datepicker",
-  SKELETON="skeleton",
-  CHECKBOX="checkbox"
+  DATE_PICKER = "datepicker",
+  SKELETON = "skeleton",
+  CHECKBOX = "checkbox"
 }
+
 export interface CustomFieldProps {
   name: string;
-  control?: Control<FieldValues>; 
+  control: Control<FieldValues>;
   label?: string;
   placeholder?: string;
   iconSrc?: string;
@@ -46,10 +46,15 @@ export interface CustomFieldProps {
 }
 
 const RenderInput = ({ field, props }: { field: any; props: CustomFieldProps }) => {
+  const { theme } = useTheme(); 
+  const inputClass = `border rounded-md flex ${
+    theme === "dark" ? "bg-dark-400 border-dark-500 text-white" : "bg-gray-100 border-gray-300 text-black"
+  }`;
+
   switch (props.fieldType) {
     case FieldTypes.INPUT:
       return (
-        <div className="flex rounded-md border border-dark-500 bg-dark-400">
+        <div className={inputClass}>
           {props.iconSrc && (
             <Image
               src={props.iconSrc}
@@ -63,30 +68,26 @@ const RenderInput = ({ field, props }: { field: any; props: CustomFieldProps }) 
             <Input
               placeholder={props.placeholder}
               {...field}
-              className="shad-input border-0"
+              className={`shad-input border-0 ${
+                theme === "dark" ? "bg-dark-400 border-dark-500 text-white" : "bg-gray-100 border-gray-300 text-black"
+              }`}
             />
           </FormControl>
         </div>
       );
     case FieldTypes.TEXTAREA:
-    return(
-      <Textarea placeholder={props.placeholder} />
-    );
+      return <Textarea placeholder={props.placeholder} {...field} className={inputClass} />;
     case FieldTypes.CHECKBOX:
-      return(
+      return (
         <div className="flex items-center space-x-2">
-          <Checkbox 
-            id={props.name}
-            checked={field.value}
-            onCheckedChange={field.onChange}
-          />
+          <Checkbox id={props.name} checked={field.value} onCheckedChange={field.onChange} />
           <label
             htmlFor={props.name}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className={`text-sm font-medium leading-none ${theme === "dark" ? "text-white" : "text-black"}`}
           >
-           {props.label}
+            {props.label}
           </label>
-      </div>
+        </div>
       );
     case FieldTypes.PhoneInput:
       return (
@@ -96,53 +97,42 @@ const RenderInput = ({ field, props }: { field: any; props: CustomFieldProps }) 
             placeholder={props.placeholder}
             international
             withCountryCallingCode
-            value={field.value as E164Number | undefined}
-            onChange={field.onChange}
-            className="input-phone"
+            value={field.value || ""}
+            onChange={(value) => field.onChange(value as E164Number | undefined)}
+            className={`input-phone ${inputClass}`}
           />
         </FormControl>
       );
     case FieldTypes.SKELETON:
-      return props.renderSkeleton?props.renderSkeleton(field):null;
-    case  FieldTypes.SELECT:
-    return(
-        <Select 
-        onValueChange={field.onChange}
-        defaultValue={field.value}
-         >
-           <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={props.placeholder}/>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent  className="bg-neutral-900">
-                   {props.children}
-                </SelectContent>
-        </Select>
-    );
-    case FieldTypes.DATE_PICKER:
-        return(
-          <div className="flex rounded-md border border-dark-500 bg-dark-400">
-          <Image
-            src="/assets/icons/calendar.svg"
-            height={24}
-            width={24}
-            alt="calendar"
-            className="ml-2"
-          />
+      return props.renderSkeleton ? props.renderSkeleton(field) : null;
+    case FieldTypes.SELECT:
+      return (
+        <Select onValueChange={field.onChange} defaultValue={field.value}>
           <FormControl>
-          <ReactDatePicker 
-          selected={field.value} 
-          onChange={(date :Date | null ) => field.onChange(date)} 
-          showTimeSelect={props.showTimeSelect??false}
-          dateFormat={props.dateFormat ?? "dd/MM/yyyy"}
-          timeInputLabel="Time:"
-          wrapperClassName="date-picker"
-          />
-          
+            <SelectTrigger className={inputClass}>
+              <SelectValue placeholder={props.placeholder} />
+            </SelectTrigger>
           </FormControl>
-          </div>
-        )
+          <SelectContent className={`shadow-lg ${theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"}`}>
+            {props.children}
+          </SelectContent>
+        </Select>
+      );
+    case FieldTypes.DATE_PICKER:
+      return (
+        <div className={inputClass}>
+          <Image src="/assets/icons/calendar.svg" height={24} width={24} alt="calendar" className="ml-2" />
+          <ReactDatePicker
+            selected={field.value}
+            onChange={(date: Date | null) => field.onChange(date)}
+            showTimeSelect={props.showTimeSelect ?? false}
+            dateFormat={props.dateFormat ?? "dd/MM/yyyy"}
+            timeInputLabel="Time:"
+            wrapperClassName="date-picker"
+            className="w-full bg-transparent border-none focus:ring-0"
+          />
+        </div>
+      );
     default:
       return null;
   }

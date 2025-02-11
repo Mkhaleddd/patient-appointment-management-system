@@ -5,13 +5,13 @@ declare type SearchParamProps = {
     searchParams: { [key: string]: string | string[] | undefined };
   };
   
-  declare type Gender = "Male" | "Female" | "Other";
+  declare type Gender = "male" | "female" | "other";
   declare type Status = "pending" | "scheduled" | "cancelled";
   
   declare interface CreateUserParams {
     name: string;
     email: string;
-    phone: string;
+    phonenumber: string;
   }
   declare interface User extends CreateUserParams {
     $id: string;
@@ -28,6 +28,7 @@ declare type SearchParamProps = {
     primaryPhysician: string;
     insuranceProvider: string;
     insurancePolicyNumber: string;
+    //@ts-ignore
     allergies: string | undefined;
     currentMedication: string | undefined;
     familyMedicalHistory: string | undefined;
@@ -39,7 +40,7 @@ declare type SearchParamProps = {
   }
   
   declare type CreateAppointmentParams = {
-    userId: string;
+    userId: string | undefinec;
     patient: string;
     primaryPhysician: string;
     reason: string;
@@ -50,8 +51,8 @@ declare type SearchParamProps = {
   
   declare type UpdateAppointmentParams = {
     appointmentId: string;
-    userId: string;
-    timeZone: string;
+    userId: string | undefined;
+    timeZone?: string;
     appointment: Appointment;
     type: string;
   };

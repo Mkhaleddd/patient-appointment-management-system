@@ -3,32 +3,53 @@
 import CustomFormField, { FieldTypes } from '@/components/CustomFormField';
 import ReusableForm from '@/components/ReusableForm';
 import { Doctors, Gender, IdentificationTypes } from '@/constants';
-import { createUser } from '@/lib/appwrite.config';
-import { userFormSchema } from '@/lib/validation';
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Image from "next/image";
-import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { FormControl } from '@/components/ui/form';
 import { SelectItem } from '@/components/ui/select';
+import FileUpload from "@/components/FileUpload"
+import { PatientFormValidation } from "@/lib/validation";
+import {PatientFormDefaultValues} from "@/constants/index";
+import router from 'next/router';
+import { registerPatient } from '@/lib/actions/patients.actions';
 
-const RegisterForm = () => {
+const RegisterForm = ({user}:{user:User}) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (values: z.infer<typeof userFormSchema>) => {
+  const onSubmit = async (values: z.infer<typeof PatientFormValidation>) => {   
+    setIsLoading(true);
+    router.push("/patients/appointment");
+    let formData;
+    if (
+      values.identificationDocument &&
+      values.identificationDocument?.length > 0
+    ) {
+      const blobFile = new Blob([values.identificationDocument[0]], {
+        type: values.identificationDocument[0].type,
+      });
+
+      formData = new FormData();
+      formData.append("blobFile", blobFile);
+      formData.append("fileName", values.identificationDocument[0].name);
+    }
     try {
-      setIsLoading(true);
+      const patient={
+        ...values,
+        userId: user.$id,
+        birthDate: new Date(values.birthDate),
+        identificationDocument: values.identificationDocument
+          ? formData
+          : undefined,        
+      }
+      //@ts-ignore
+      const newPatient = await registerPatient(patient);
 
-      const userData = {
-        name: values.name,
-        email: values.email,
-        phone: values.phonenumber,
-      };
-
-      const newUser = await createUser(userData);
-      console.log("done", newUser);
+      router.push("/patients/appointment");
+        
+      // if (newPatient) router.push(`/patients/${user.$id}/new-appointment`);
     } catch (err) {
       console.log(err);
     } finally {
@@ -37,7 +58,7 @@ const RegisterForm = () => {
   };
 
   return (
-    <section className='space-y-2 gap-4 flex-1 xl:w-10/12  remove-scrollbar' aria-label='complete registration'>
+    <section className='space-y-2  gap-4 flex-1 xl:w-9/12  remove-scrollbar' aria-label='complete registration'>
       <section className="space-y-4">
         <h1 className="header" title='complete registration'>Welcome 👋</h1>
         <p className="text-dark-700">Let us know more about yourself.</p>
@@ -49,7 +70,9 @@ const RegisterForm = () => {
         <ReusableForm
           isLoading={isLoading}
           onSubmit={onSubmit}
+          validation={PatientFormValidation}
           defaultValues={{
+            ...PatientFormDefaultValues,
             name: "",
             email: "",
             phonenumber: "",
@@ -218,7 +241,25 @@ const RegisterForm = () => {
             ))
            }
           </CustomFormField>
-          
+          <CustomFormField
+              fieldType={FieldTypes.INPUT}
+              name="identificationNumber"
+              label="identification number"
+              placeholder="12346789"
+            />
+            <CustomFormField 
+              name="identificationDocument"
+              label="identification document"
+              fieldType={FieldTypes.SKELETON}
+              renderSkeleton={(field) => (
+               <FormControl>
+                  <FileUpload 
+                    files={field.value}
+                    OnChange={field.onChange}
+                  />
+               </FormControl>
+              )}
+            />
           </section>
           <section className="space-y-6 py-6">
             <div className="mb-9 space-y-1">

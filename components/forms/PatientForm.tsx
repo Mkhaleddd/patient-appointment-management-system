@@ -3,35 +3,34 @@
 import { z } from "zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { userFormSchema } from "@/lib/validation";
 import { FieldTypes } from "@/components/CustomFormField";
 import { createUser } from "@/lib/appwrite.config";
 import ReusableForm from "@/components/ReusableForm";
-import CustomFormField from "../../components/CustomFormField";
+import CustomFormField from "../CustomFormField";
+import { userFormSchema } from "@/lib/validation";
 
 const PatientForm = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
+  
   const onSubmit = async (values: z.infer<typeof userFormSchema>) => {
+    setIsLoading(true)
     try {
-      setIsLoading(true);
-
-      const userData = {
+      const user = {
         name: values.name,
         email: values.email,
-        phone: values.phonenumber,
+        phonenumber: values.phonenumber,
       };
 
-      const newUser = await createUser(userData);
-      console.log("done",newUser);
-
-    
-        router.push(`patients/trial`);
-      
-    } catch (err) {
+     const newUser = await createUser(user);
+    // if(newUser) router.push(`/patients/${newUser.$id}/register`);
+    router.push("patients/register")
+    }  
+    catch (err) {
       console.log(err);
-    } finally {
+    } 
+     finally {
       setIsLoading(false);
     }
   };
@@ -39,14 +38,16 @@ const PatientForm = () => {
   return (
     <section className="space-y-8" aria-labelledby="user creation">
         <ReusableForm
-              isLoading={isLoading}
-              onSubmit={onSubmit}
-              defaultValues={{
-                name: "",
-                email: "",
-                phonenumber: "",
-              }}
-            >
+        isLoading={isLoading}
+        onSubmit={onSubmit}
+        validation={userFormSchema}
+        defaultValues={{
+          name: "",
+          email: "",
+          phonenumber: "",
+        }}   btnLabel={"Submit"}            >
+              <h1 className="header">Hi there 👋</h1>
+              <p className="text-dark-700 mb-5">Get started with appointments.</p>
               <CustomFormField
                 name="name"
                 label="Full Name"

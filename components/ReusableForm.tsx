@@ -1,48 +1,50 @@
 "use client"
 
-import React from "react"
-import { SubmitHandler, useForm } from "react-hook-form"
-import {Form} from "@/components/ui/form"
-import { z } from "zod"
+import React from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { Form } from "@/components/ui/form";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import SumbitButton from "./SumbitButton"
-import { userFormSchema } from "@/lib/validation"
+import SumbitButton from "./SumbitButton";
 
-interface ReusableFormProps {
-  children: React.ReactNode
-  defaultValues?: {
-    name: string
-    email: string
-    phonenumber: string
-    }
-  
-  isLoading:boolean
-  onSubmit: SubmitHandler<z.infer<typeof userFormSchema>>
+interface ReusableFormProps<T extends z.ZodType<any, any>> {
+  children: React.ReactNode;
+  defaultValues?: Partial<z.infer<T>>;
+  btnLabel?: string;
+  isLoading: boolean;
+  onSubmit: SubmitHandler<z.infer<T>>;
+  validation: T;
 }
 
-const ReusableForm=({children,defaultValues,onSubmit,isLoading}: ReusableFormProps)=>{
-
-    let form = useForm<z.infer<typeof userFormSchema>>({
-    defaultValues: {
-      name: defaultValues?.name || "",
-      email: defaultValues?.email || "",
-      phonenumber: defaultValues?.phonenumber || ""
-    },
-    resolver: zodResolver(userFormSchema), 
-  })
+const ReusableForm = <T extends z.ZodType<any, any>>({
+  children,
+  defaultValues = {},
+  onSubmit,
+  isLoading,
+  validation,
+  btnLabel = "Submit"
+}: ReusableFormProps<T>) => {
+  const form = useForm<z.infer<T>>({
+    //@ts-ignore
+    defaultValues,
+    resolver: zodResolver(validation),
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>  
-      {React.Children.map(children, (child) => {
-      
-        return React.cloneElement(child as React.ReactElement<any>, {
-         control: form.control, 
-        });
-      })}
-        <SumbitButton isLoading={isLoading}>Submit</SumbitButton>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        {children && (
+          React.Children.map(children, (child) =>
+            child ? React.cloneElement(child as React.ReactElement<any>, { control: form.control }) : null
+          )
+        )}
+
+        <SumbitButton isLoading={isLoading}>
+          {btnLabel}
+        </SumbitButton>
       </form>
     </Form>
-  )
-}
-export default  ReusableForm
+  );
+};
+
+export default ReusableForm;
